@@ -1,0 +1,822 @@
+/* --- Pensjonsgapet — SPWM wealth portal --- */
+body {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-book);
+    line-height: 1.5;
+    background-color: var(--gray-50);
+    color: var(--gray-700);
+}
+.page {
+    display: none;
+}
+.page.active {
+    display: block;
+}
+
+/* Legacy aliases → SPWM tokens */
+:root {
+    --heading-scale: 0.42;
+    --label-scale: 0.7;
+    --sp-background: var(--gray-50);
+    --sp-foreground: var(--gray-700);
+    --sp-dark-blue: var(--sp-navy);
+    --sp-blue: var(--blue-main);
+    --sp-cyan-40: var(--blue-400);
+    --sp-cyan-20: var(--blue-100);
+    --sp-border: var(--gray-200);
+    --accent-blue-light: var(--blue-main);
+    --primary-btn: var(--blue-main);
+    --primary-btn-hover: var(--sp-navy-pressed);
+    --text-primary: var(--gray-700);
+    --text-secondary: var(--gray-600);
+    --text-muted: var(--gray-500);
+    --bg-white: var(--white);
+    --bg-light: var(--gray-50);
+    --border-color: var(--gray-200);
+    --panel-shadow: var(--shadow-sm);
+}
+.typo-h1 { font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: clamp(calc(3rem * var(--heading-scale)), calc(6vw * var(--heading-scale)), calc(6.8rem * var(--heading-scale))); line-height: 1.1; letter-spacing: var(--display-xl-track); color: var(--sp-navy); }
+.typo-h2 { font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: clamp(calc(1.125rem * var(--heading-scale)), calc(3.5vw * var(--heading-scale)), calc(5rem * var(--heading-scale))); line-height: 1.15; letter-spacing: 0; color: var(--sp-navy); }
+.typo-h3 { font-family: var(--font-display); font-weight: var(--fw-bold); font-size: clamp(calc(0.875rem * var(--heading-scale)), calc(1.3vw * var(--heading-scale)), calc(1.375rem * var(--heading-scale))); line-height: 1.25; letter-spacing: 0; color: var(--sp-navy); }
+.typo-h4 { font-family: var(--font-display); font-weight: var(--fw-bold); font-size: calc(1rem * var(--heading-scale)); line-height: 1.35; letter-spacing: 0; color: var(--sp-navy); }
+.typo-label { font-family: var(--font-sans); font-weight: var(--fw-medium); text-transform: uppercase; letter-spacing: 0.1em; font-size: calc(1rem * var(--label-scale)); }
+.typo-paragraph { font-family: var(--font-sans); font-weight: var(--fw-book); font-size: clamp(0.875rem, 1vw, 1rem); }
+.typo-strong { font-family: var(--font-sans); font-weight: var(--fw-bold); }
+
+/* --- Dashboard: SPWM tema --- */
+#dashboardPage {
+    --accent-blue-light: var(--blue-main);
+    --accent-blue-vibrant: var(--blue-400);
+    --card-bg: var(--white);
+    --light-text: var(--gray-700);
+    --medium-text: var(--gray-500);
+    --border-color: var(--gray-200);
+    --success-green: var(--success-600);
+    --v-compact: 0.9;
+    background-color: var(--gray-50);
+}
+#dashboardPage h1, #dashboardPage .typo-h1 { color: var(--sp-navy); }
+#dashboardPage h2, #dashboardPage .typo-h2,
+#dashboardPage h3, #dashboardPage .typo-h3,
+#dashboardPage h4, #dashboardPage .typo-h4 { color: var(--sp-navy); }
+
+/* Tall og tekst over inputslidere: samme som Formuesskatt (typo-label + verdier i primær blå) */
+#dashboardPage .input-group label {
+    font-weight: var(--fw-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gray-700) !important;
+    font-family: var(--font-sans);
+}
+/* Tailwind font-semibold = 600; SPWM bruker semibold (600) */
+#dashboardPage .font-semibold {
+    font-weight: var(--fw-semibold) !important;
+}
+
+#dashboardPage .input-group [id$="-value"] {
+    color: var(--primary-btn) !important;
+    font-weight: var(--fw-bold);
+    font-family: var(--font-sans);
+}
+#dashboardPage #input-container .input-group:nth-child(1) { font-size: calc(0.95rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(2) { font-size: calc(0.92rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(3) { font-size: calc(0.9rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(4) { font-size: calc(0.88rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(5) { font-size: calc(0.86rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(6) { font-size: calc(0.84rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(7) { font-size: calc(0.82rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(8) { font-size: calc(0.81rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(9) { font-size: calc(0.8rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(10) { font-size: calc(0.79rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(11) { font-size: calc(0.78rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(12) { font-size: calc(0.77rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(13) { font-size: calc(0.76rem * var(--v-compact)); }
+#dashboardPage #input-container .input-group:nth-child(n+14) { font-size: calc(0.75rem * var(--v-compact)); }
+/* Slidere under Pensjonsgap (Kombinasjonsløsning) – også stor til liten */
+#dashboardPage #combo-sliders-container .input-group:nth-child(1) { font-size: calc(0.82rem * var(--v-compact)); }
+#dashboardPage #combo-sliders-container .input-group:nth-child(2) { font-size: calc(0.8rem * var(--v-compact)); }
+/* Verdier ved slidere og input – samme som Formuesskatt (0.9rem) */
+#dashboardPage .input-group input,
+#dashboardPage .input-group [id$="-value"],
+#dashboardPage #input-container .asset-input {
+    font-size: calc(0.9rem * var(--v-compact)) !important;
+}
+/* Samme skala som Formuesskatt, 15 % mindre enn før */
+#dashboardPage .output-value {
+    font-size: calc(1.5rem * var(--v-compact));
+    font-weight: var(--fw-bold);
+    color: var(--primary-btn);
+    word-break: break-word;
+}
+#dashboardPage .output-label {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: calc(1rem * var(--label-scale) * var(--v-compact));
+    color: var(--text-muted);
+}
+
+/* Slightly smaller numbers inside combo result cards to fit nicely */
+#dashboardPage .combo-output .output-value {
+    font-size: calc(1.275rem * var(--v-compact));
+    line-height: calc(1.7rem * var(--v-compact));
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+/* Make combo cards a bit more compact */
+#dashboardPage .combo-output {
+    padding-top: calc(1rem * var(--v-compact)) !important;
+    padding-bottom: calc(1rem * var(--v-compact)) !important;
+    justify-content: flex-start !important;
+}
+
+/* Keep number rows aligned across combo cards */
+#dashboardPage .combo-output .output-value {
+    margin-bottom: calc(0.43rem * var(--v-compact));
+    min-height: calc(1.7rem * var(--v-compact));
+}
+
+/* Quote block styles per spec (optional, for future use) */
+#dashboardPage blockquote {
+    font-family: var(--font-italic);
+    font-style: italic;
+    font-weight: var(--fw-medium);
+}
+
+/* Linjeavstand mellom slidere og paneler 15 % mindre (× 0.85) – samme nivå som Formuesskatt */
+#dashboardPage #input-container {
+    gap: 0 !important;
+}
+#dashboardPage #input-container > * + * {
+    margin-top: calc(0.65rem * var(--v-compact)) !important;
+}
+#dashboardPage .input-group .flex.justify-between.items-baseline,
+#dashboardPage .input-group .mb-2 {
+    margin-bottom: calc(0.26rem * var(--v-compact)) !important;
+}
+#dashboardPage .card-panel {
+    background-color: var(--bg-white) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: calc(24px * var(--v-compact)) !important;
+    box-shadow: var(--panel-shadow);
+}
+#dashboardPage .card-panel.space-y-6 > * + * {
+    margin-top: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .grid.gap-8 {
+    gap: calc(1.05rem * var(--v-compact)) !important;
+}
+#dashboardPage .flex.flex-col.gap-8 {
+    gap: calc(1.05rem * var(--v-compact)) !important;
+}
+#dashboardPage .grid.gap-6 {
+    gap: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .grid.gap-3 {
+    gap: calc(0.39rem * var(--v-compact)) !important;
+}
+#dashboardPage .summary-panel,
+#dashboardPage .metrics-panel {
+    padding: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .mb-6 {
+    margin-bottom: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .mt-6 {
+    margin-top: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .mt-2,
+#dashboardPage .output-label.mt-2 {
+    margin-top: calc(0.26rem * var(--v-compact)) !important;
+}
+#dashboardPage .space-y-4 > * + * {
+    margin-top: calc(0.52rem * var(--v-compact)) !important;
+}
+#dashboardPage .space-y-3 > * + * {
+    margin-top: calc(0.39rem * var(--v-compact)) !important;
+}
+#dashboardPage .mt-4 {
+    margin-top: calc(0.52rem * var(--v-compact)) !important;
+}
+#dashboardPage .mt-8 {
+    margin-top: calc(2rem * var(--v-compact)) !important;
+}
+#dashboardPage .mb-3 {
+    margin-bottom: calc(0.75rem * var(--v-compact)) !important;
+}
+#dashboardPage .mb-5 {
+    margin-bottom: calc(1.25rem * var(--v-compact)) !important;
+}
+#dashboardPage .space-y-5 > * + * {
+    margin-top: calc(1.25rem * var(--v-compact)) !important;
+}
+#dashboardPage .asset-input.mt-2 {
+    margin-top: calc(0.26rem * var(--v-compact)) !important;
+}
+
+/* Output-paneler: SPWM navy bakgrunn, hvite tall */
+#dashboardPage .summary-panel {
+    background-color: var(--sp-navy) !important;
+    border: none !important;
+    border-radius: var(--radius-lg) !important;
+    padding: calc(24px * var(--v-compact)) !important;
+    box-shadow: var(--panel-shadow);
+    color: var(--gray-700) !important;
+}
+#dashboardPage .summary-panel .output-value {
+    color: var(--white) !important;
+    font-weight: var(--fw-semibold) !important;
+    font-size: calc(1.5rem * var(--v-compact)) !important;
+    font-family: var(--font-display) !important;
+    background: transparent !important;
+}
+#dashboardPage .summary-panel .output-label {
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-top: calc(0.25rem * var(--v-compact)) !important;
+}
+/* Kombinasjonsbokser: grå i inaktiv tilstand, grønne når de aktiveres (klikkes) */
+#dashboardPage .combo-output {
+    background-color: var(--gray-100) !important;
+    border: 1px solid var(--gray-200) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: calc(24px * var(--v-compact)) !important;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+#dashboardPage .combo-output:hover {
+    border-color: var(--gray-300) !important;
+}
+#dashboardPage .combo-output[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) translateY(6px);
+    width: max-content;
+    max-width: 280px;
+    padding: 0.7rem 0.9rem;
+    background: var(--sp-navy);
+    color: var(--white);
+    font-family: var(--font-sans);
+    font-weight: var(--fw-medium);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 24px rgba(0, 35, 89, 0.22);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 60;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+#dashboardPage .combo-output[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%) translateY(6px);
+    border: 6px solid transparent;
+    border-top-color: var(--sp-navy);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 60;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+#dashboardPage .combo-output[data-tooltip]:hover::after,
+#dashboardPage .combo-output[data-tooltip]:focus-visible::after,
+#dashboardPage .combo-output[data-tooltip]:hover::before,
+#dashboardPage .combo-output[data-tooltip]:focus-visible::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+#dashboardPage .combo-output .output-value {
+    color: var(--gray-500) !important;
+    font-weight: var(--fw-semibold) !important;
+    font-family: var(--font-display) !important;
+}
+#dashboardPage .combo-output .output-label {
+    color: var(--gray-500) !important;
+}
+#dashboardPage .combo-output.combo-output--active {
+    background-color: var(--success-600) !important;
+    border-color: var(--success-600) !important;
+    box-shadow: var(--panel-shadow);
+}
+#dashboardPage .combo-output.combo-output--active .output-value {
+    color: var(--white) !important;
+}
+#dashboardPage .combo-output.combo-output--active .output-label {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+#dashboardPage .metrics-panel {
+    background-color: var(--bg-light) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    padding: calc(1rem * var(--v-compact)) !important;
+    color: var(--gray-700) !important;
+}
+#dashboardPage .metrics-panel .text-slate-300,
+#dashboardPage .metrics-panel .text-white,
+#dashboardPage .metrics-panel span.font-semibold { color: var(--gray-700) !important; }
+#dashboardPage .metrics-panel hr { border-color: var(--border-color) !important; }
+#dashboardPage #pension-gap-summary.metrics-panel {
+    background-color: var(--sp-navy) !important;
+    border: none !important;
+}
+#dashboardPage #pension-gap-summary .output-label { color: rgba(255, 255, 255, 0.85) !important; }
+#dashboardPage #pension-gap-details {
+    color: var(--white) !important;
+    font-weight: var(--fw-semibold) !important;
+    font-family: var(--font-display) !important;
+    font-size: clamp(calc(1.225rem * var(--heading-scale)), calc(1.82vw * var(--heading-scale)), calc(1.925rem * var(--heading-scale))) !important;
+}
+#dashboardPage #goal-met-message { color: var(--success-green) !important; }
+#dashboardPage .text-slate-500,
+#dashboardPage #goal-explainer { color: var(--text-muted) !important; }
+
+/* Knapper: SPWM blue-main primær, hvit tekst på valgt */
+#dashboardPage .text-slate-400,
+#dashboardPage #toggleDetailedViewBtn,
+#dashboardPage #togglePensionGapBtn,
+#dashboardPage #toggleInputsBtn {
+    color: var(--text-muted) !important;
+}
+#dashboardPage #toggleDetailedViewBtn:hover,
+#dashboardPage #togglePensionGapBtn:hover,
+#dashboardPage #toggleInputsBtn:hover {
+    color: var(--primary-btn) !important;
+    background-color: var(--gray-100) !important;
+}
+#dashboardPage .combo-btn,
+#dashboardPage .choice-btn {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background-color: var(--bg-white) !important;
+    color: var(--gray-700) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    transition: all 0.2s;
+}
+#dashboardPage .combo-btn:hover,
+#dashboardPage .choice-btn:hover {
+    border-color: var(--primary-btn) !important;
+    background-color: var(--gray-50) !important;
+}
+#dashboardPage .combo-btn[data-combo-selected="true"],
+#dashboardPage .combo-btn.bg-\[var\(--accent-blue-light\)\],
+#dashboardPage .choice-btn.bg-\[var\(--accent-blue-light\)\],
+#dashboardPage .choice-btn.choice-btn-selected {
+    background-color: var(--primary-btn) !important;
+    color: var(--white) !important;
+    border-color: var(--primary-btn) !important;
+}
+
+/* Input-felter: hvit, SPWM border, focus blue-main */
+#dashboardPage .asset-input,
+#dashboardPage input[type="number"].asset-input,
+#dashboardPage #input-container input,
+#dashboardPage #combo-sliders-container input {
+    background-color: var(--bg-white) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--gray-700) !important;
+    border-radius: var(--radius-md) !important;
+}
+#dashboardPage .asset-input:focus,
+#dashboardPage #input-container input:focus,
+#dashboardPage #combo-sliders-container input:focus {
+    outline: none !important;
+    border-color: var(--blue-main) !important;
+    box-shadow: 0 0 0 3px var(--ring) !important;
+}
+#dashboardPage [id$="-value"] { color: var(--primary-btn) !important; }
+#dashboardPage header .text-slate-400,
+#dashboardPage .text-slate-400 { color: var(--text-muted) !important; }
+#dashboardPage .text-xs.text-slate-400 { color: var(--text-muted) !important; }
+#dashboardPage .pb-2 {
+    padding-bottom: calc(0.26rem * var(--v-compact)) !important;
+}
+#dashboardPage header.mb-8 {
+    margin-bottom: calc(1.56rem * var(--v-compact)) !important;
+    flex-shrink: 0;
+}
+.dashboard-tabs {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-1);
+    margin-top: calc(1rem * var(--v-compact));
+    border-bottom: 1px solid var(--gray-200);
+}
+.dashboard-tabs__btn {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm-size);
+    line-height: var(--text-sm-lh);
+    color: var(--gray-500);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: calc(0.625rem * var(--v-compact)) var(--space-4);
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+.dashboard-tabs__btn:hover {
+    color: var(--sp-navy);
+}
+.dashboard-tabs__btn.active,
+.dashboard-tabs__btn[aria-selected="true"] {
+    color: var(--sp-navy);
+    border-bottom-color: var(--blue-main);
+}
+.dashboard-tabs__btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+    border-radius: var(--radius-xs);
+}
+.dashboard-tab {
+    display: none;
+}
+.dashboard-tab.active {
+    display: block;
+}
+.dashboard-tab-empty {
+    min-height: calc(12rem * var(--v-compact));
+}
+.payout-chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(68vh * var(--v-compact));
+    min-height: 360px;
+}
+.chart-toggle-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.42rem 0.9rem;
+    font-family: var(--font-sans);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm-size);
+    line-height: 1;
+    color: var(--gray-600);
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.chart-toggle-btn:hover {
+    border-color: var(--blue-main);
+    color: var(--sp-navy);
+}
+.chart-toggle-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+}
+.chart-toggle-btn__dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    border: 2px solid var(--gray-400);
+    background: transparent;
+    flex-shrink: 0;
+    transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.chart-toggle-btn.is-active {
+    color: var(--white);
+    background: var(--blue-main);
+    border-color: var(--blue-main);
+    box-shadow: 0 2px 6px rgba(0, 45, 114, 0.18);
+}
+.chart-toggle-btn.is-active .chart-toggle-btn__dot {
+    border-color: var(--white);
+    background: var(--white);
+}
+
+/* Header og faner skal ligge fast øverst uavhengig av faneinnhold */
+#dashboardPage .dashboard-shell {
+    justify-content: flex-start !important;
+    align-items: stretch;
+}
+#dashboardPage .dashboard-shell > .w-full {
+    width: 100%;
+    max-width: none;
+}
+
+#dashboardPage .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: calc(0.85rem * var(--v-compact)) !important;
+    padding-bottom: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .min-h-screen.p-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+@media (min-width: 1024px) {
+    #dashboardPage .min-h-screen.lg\:p-8 {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+#dashboardPage #combo-sliders-container.gap-6 {
+    gap: calc(0.78rem * var(--v-compact)) !important;
+}
+#dashboardPage .combo-output .output-value {
+    margin-bottom: calc(0.26rem * var(--v-compact)) !important;
+}
+#dashboardPage .combo-output {
+    padding-top: calc(0.52rem * var(--v-compact)) !important;
+    padding-bottom: calc(0.52rem * var(--v-compact)) !important;
+}
+#dashboardPage input[type="range"] {
+    height: calc(8px * var(--v-compact));
+}
+
+/* Toppfelt: logo venstre, fullskjerm høyre */
+.app-chrome {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    background-color: transparent;
+    border: none;
+}
+.app-chrome__logo {
+    height: 34px;
+    width: auto;
+    display: block;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    background: transparent;
+}
+.app-chrome__fullscreen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+}
+.app-chrome__fullscreen:hover {
+    color: var(--blue-main);
+    background-color: var(--gray-100);
+}
+.app-chrome__fullscreen:focus-visible {
+    outline: none;
+    color: var(--blue-main);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+.app-chrome__fullscreen-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.app-chrome__fullscreen svg.hidden {
+    display: none;
+}
+
+/* --- Common Slider Styles --- */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    outline: none;
+    transition: background 0.3s, opacity 0.2s;
+}
+
+/* Dashboard Slider: SPWM blue-main thumb */
+#dashboardPage input[type="range"] {
+    background: var(--border-color);
+    height: 8px;
+    border-radius: 999px;
+}
+#dashboardPage input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--blue-main);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: var(--shadow-xs);
+}
+#dashboardPage input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--blue-main);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: var(--shadow-xs);
+}
+
+/* Prognosis Tool Slider: SPWM blue-main */
+#prognosisPage input[type="range"] {
+    background: var(--border-color);
+    height: 8px;
+    border-radius: 999px;
+}
+#prognosisPage input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--blue-main);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+}
+#prognosisPage input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--blue-main);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+}
+
+/* Common Number Input Style */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Prognosis Tool Animations */
+.panel-enter {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+.panel-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* Modal fine-tuning via #outputModal */
+/* Toggle visibility while preserving layout space */
+.visibility-hidden {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Output Modal */
+.output-modal-panel {
+    background-color: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+}
+.output-modal-title {
+    color: var(--sp-navy);
+}
+.output-modal-close {
+    color: var(--gray-500);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius-md);
+    transition: color 0.2s, background-color 0.2s;
+}
+.output-modal-close:hover {
+    color: var(--gray-700);
+    background-color: var(--gray-100);
+}
+
+/* Output Modal Textarea Styling */
+#outputTextArea {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-book);
+    font-size: clamp(0.875rem, 1vw, 1rem);
+    line-height: 1.5;
+    background-color: var(--gray-50);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+#outputTextArea:focus {
+    outline: none;
+    border-color: var(--blue-main);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+#outputTextArea::placeholder {
+    color: var(--gray-400);
+    font-style: italic;
+}
+
+/* Copy Button: SPWM primary */
+#copyButton {
+    font-family: var(--font-sans);
+    font-size: clamp(0.625rem, 1.5vw, 0.6875rem);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.2s ease-in-out;
+    background-color: var(--primary-btn) !important;
+    color: var(--white) !important;
+    border-radius: var(--radius-md);
+}
+#copyButton:hover {
+    background-color: var(--primary-btn-hover) !important;
+    box-shadow: var(--shadow-sm);
+}
+#copyButton:active {
+    transform: translateY(0);
+}
+#copyButton[data-copied="true"] {
+    background-color: var(--success-green) !important;
+    color: var(--white) !important;
+}
+
+/* Custom Combo Input: samme som Formuesskatt */
+#customComboPercent {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-medium);
+    text-align: center;
+    padding-right: 1.5rem;
+    background-color: var(--bg-white) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--gray-700) !important;
+    border-radius: var(--radius-md) !important;
+}
+#customComboPercent::-webkit-outer-spin-button,
+#customComboPercent::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+#customComboPercent[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+#customComboPercent:focus {
+    outline: none;
+    border-color: var(--blue-main);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* Custom Desired Pension Level Input */
+#customDesiredPensionLevel {
+    font-family: var(--font-sans);
+    font-weight: var(--fw-medium);
+    text-align: center;
+    padding-right: 1.5rem;
+    background-color: var(--bg-white) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--gray-700) !important;
+    border-radius: var(--radius-md) !important;
+}
+#customDesiredPensionLevel::-webkit-outer-spin-button,
+#customDesiredPensionLevel::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+#customDesiredPensionLevel[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+#customDesiredPensionLevel:focus {
+    outline: none;
+    border-color: var(--blue-main);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
