@@ -157,6 +157,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Inkluder 0 og "0" – ikkje hopp over med == null
                             if (el && v !== null && v !== undefined) {
                                 el.value = String(v);
+                                if (id === 'desiredPensionLevel' && typeof window.PensjonsgapetSyncDesiredPensionUI === 'function') {
+                                    window.PensjonsgapetSyncDesiredPensionUI(parseFloat(v));
+                                }
                                 if (el.type === 'range') el.dispatchEvent(new Event('input', { bubbles: true }));
                             }
                         });
@@ -226,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (stockMatch) num = stockToReturn[parseInt(stockMatch[1], 10)] ?? num;
                 }
                 el.value = String(num);
+                if (id === 'desiredPensionLevel' && typeof window.PensjonsgapetSyncDesiredPensionUI === 'function') {
+                    window.PensjonsgapetSyncDesiredPensionUI(num);
+                }
                 const valSpan = document.getElementById(id + '-value');
                 if (valSpan && id !== 'grunnbelop') valSpan.textContent = valueStr.includes('kr') ? new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num) : valueStr;
                 if (el.type === 'range') el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -315,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'payoutYears', label: 'Utbetalingsperiode OTP', type: 'range', min: 10, max: 20, step: 1, value: 15, unit: 'år' },
                 { id: 'cpiRate', label: 'Forventet årlig KPI', type: 'range', min: 0, max: 10, step: 0.1, value: 3, unit: '%' },
                 { id: 'socialSecurityEstimate', label: 'Årlig utbetaling Folketrygden', type: 'range', min: 150000, max: 600000, step: 5000, value: 250000, unit: 'kr' },
-                { id: 'desiredPensionLevel', label: 'Ønsket pensjonsnivå', type: 'range', min: 40, max: 100, step: 1, value: 80, unit: '%' }
+                { id: 'desiredPensionLevel', label: 'Ønsket pensjonsnivå', type: 'range', min: 0, max: 100, step: 0.1, value: 80, unit: '%' }
             ],
             
             init: function() {
@@ -478,34 +484,84 @@ document.addEventListener('DOMContentLoaded', function() {
                             customInput.placeholder = '';
                             customInput.min = '0';
                             customInput.max = '100';
-                            customInput.step = '1';
+                            customInput.step = '0.1';
                             customInput.value = '';
-                            
-                            // Add % symbol overlay
+
                             const percentSymbol = document.createElement('div');
-                            percentSymbol.className = 'absolute inset-0 pointer-events-none flex items-center justify-center';
+                            percentSymbol.className = 'absolute inset-y-0 right-2 pointer-events-none flex items-center';
                             percentSymbol.innerHTML = '<span class="text-xs text-slate-400">%</span>';
-                            
+
                             customInputDiv.appendChild(customInput);
                             customInputDiv.appendChild(percentSymbol);
                             btnRow.appendChild(customInputDiv);
-                            
-                            // Add event listener for custom input
+
+                            const presetValues = options.slice(1);
+                            const applyCustomDesired = (rawVal) => {
+                                if (rawVal === '' || rawVal == null) return;
+                                let value = parseFloat(String(rawVal).replace(',', '.'));
+                                if (isNaN(value)) return;
+                                value = Math.min(100, Math.max(0, value));
+                                input.value = value;
+                                customInput.value = String(value);
+                                btnRow.querySelectorAll('.choice-btn').forEach(b => {
+                                    b.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900', 'choice-btn-selected');
+                                    b.removeAttribute('data-selected');
+                                });
+                                customInput.classList.add('bg-[var(--accent-blue-light)]', 'text-slate-900');
+                                if (valueSpan) valueSpan.textContent = `${value} %`;
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                            };
+                            const syncDesiredPensionUI = (value) => {
+                                const num = Math.min(100, Math.max(0, parseFloat(value)));
+                                if (isNaN(num)) return;
+                                input.value = num;
+                                const presetBtn = Array.from(btnRow.querySelectorAll('.choice-btn')).find(
+                                    b => parseFloat(b.textContent) === num
+                                );
+                                if (presetBtn) {
+                                    customInput.value = '';
+                                    customInput.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900');
+                                    btnRow.querySelectorAll('.choice-btn').forEach(b => {
+                                        b.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900', 'choice-btn-selected');
+                                        b.removeAttribute('data-selected');
+                                    });
+                                    presetBtn.classList.add('bg-[var(--accent-blue-light)]', 'text-slate-900', 'choice-btn-selected');
+                                    presetBtn.setAttribute('data-selected', 'true');
+                                } else {
+                                    customInput.value = String(num);
+                                    customInput.classList.add('bg-[var(--accent-blue-light)]', 'text-slate-900');
+                                    btnRow.querySelectorAll('.choice-btn').forEach(b => {
+                                        b.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900', 'choice-btn-selected');
+                                        b.removeAttribute('data-selected');
+                                    });
+                                }
+                                if (valueSpan) valueSpan.textContent = `${num} %`;
+                            };
+                            window.PensjonsgapetSyncDesiredPensionUI = syncDesiredPensionUI;
+
                             customInput.addEventListener('input', (e) => {
-                                const value = parseFloat(e.target.value);
+                                const raw = e.target.value.trim();
+                                if (raw === '' || raw === '-') {
+                                    customInput.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900');
+                                    return;
+                                }
+                                const value = parseFloat(raw.replace(',', '.'));
                                 if (!isNaN(value) && value >= 0 && value <= 100) {
-                                    input.value = value;
-                                    // Clear button selections when custom input is used
-                                    btnRow.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900'));
-                                    // update label value immediately
-                                    if (valueSpan) valueSpan.textContent = `${value} %`;
-                                    // trigger recalculation
-                                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                                    applyCustomDesired(value);
                                 }
                             });
-                            
-                            // Skip the first option (0) and create buttons for the rest
-                            options.slice(1).forEach((val) => {
+                            customInput.addEventListener('blur', (e) => {
+                                const raw = e.target.value.trim();
+                                if (raw === '') return;
+                                let value = parseFloat(raw.replace(',', '.'));
+                                if (isNaN(value)) {
+                                    customInput.value = '';
+                                    return;
+                                }
+                                applyCustomDesired(value);
+                            });
+
+                            presetValues.forEach((val) => {
                                 const btn = document.createElement('button');
                                 btn.type = 'button';
                                 btn.className = 'choice-btn w-full py-1 text-sm rounded-full bg-slate-700 text-white hover:bg-slate-600 transition';
@@ -520,9 +576,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     // add to clicked button
                                     btn.classList.add('bg-[var(--accent-blue-light)]', 'text-slate-900', 'choice-btn-selected');
                                     btn.setAttribute('data-selected', 'true');
-                                    // Clear custom input when button is selected
                                     customInput.value = '';
-                                    // update label value immediately
+                                    customInput.classList.remove('bg-[var(--accent-blue-light)]', 'text-slate-900');
                                     if (valueSpan) valueSpan.textContent = `${val} %`;
                                     // trigger recalculation
                                     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -625,18 +680,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 { key: 'fripoliser', label: 'Fripoliser', color: '#F79009' },
                 { key: 'egenSparing', label: 'Egen sparing', color: '#15B79E' }
             ],
-            getActiveExtraPayout: function(p) {
-                const gap = Math.max(0, p.annualPensionGap || 0);
-                if (gap <= 0) return 0;
-                const pct = (p.comboPercent != null ? p.comboPercent : 100) / 100;
-                const lumpEl = document.getElementById('combo-lump-sum');
-                const monthlyEl = document.getElementById('combo-monthly');
-                const lumpBox = lumpEl ? lumpEl.closest('.combo-output') : null;
-                const monthlyBox = monthlyEl ? monthlyEl.closest('.combo-output') : null;
-                let share = 0;
-                if (lumpBox && lumpBox.classList.contains('combo-output--active')) share += pct;
-                if (monthlyBox && monthlyBox.classList.contains('combo-output--active')) share += (1 - pct);
-                return Math.round(gap * share);
+            gapPaymentAtYear: function(annualPensionGap, flatPension, g, yearIndex) {
+                if (annualPensionGap <= 0) return 0;
+                const growth = Math.pow(1 + g, yearIndex);
+                return annualPensionGap * growth + (flatPension || 0) * (growth - 1);
+            },
+            pvInflationAdjustedGap: function(annualPensionGap, flatPension, g, r, periods) {
+                if (periods <= 0 || annualPensionGap <= 0) return 0;
+                let pv = 0;
+                for (let t = 0; t < periods; t++) {
+                    const payment = this.gapPaymentAtYear(annualPensionGap, flatPension, g, t);
+                    if (Math.abs(r) < 1e-9) {
+                        pv += payment;
+                    } else {
+                        pv += payment / Math.pow(1 + r, t + 1);
+                    }
+                }
+                return pv;
+            },
+            remainingGapBalance: function(V0, annualPensionGap, flatPension, g, r, k) {
+                if (k <= 0) return V0;
+                let withdrawn = 0;
+                for (let t = 0; t < k; t++) {
+                    const payment = this.gapPaymentAtYear(annualPensionGap, flatPension, g, t);
+                    withdrawn += payment * Math.pow(1 + Math.max(0, r), k - 1 - t);
+                }
+                return Math.max(0, V0 * Math.pow(1 + Math.max(0, r), k) - withdrawn);
+            },
+            getActiveExtraPayout: function(p, yearIndex) {
+                if ((p.annualPensionGap || 0) <= 0) return 0;
+                return Math.round(this.gapPaymentAtYear(
+                    p.annualPensionGap,
+                    p.flatPension || 0,
+                    p.cpiRate || 0,
+                    yearIndex != null ? yearIndex : 0
+                ));
             },
             buildPayoutChartData: function(p) {
                 const startAge = Math.round(p.age);
@@ -646,7 +724,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const retirementSpan = Math.max(otpYears, folketrygdYears);
                 const totalYears = workYears + retirementSpan;
                 const g = p.cpiRate || 0;
-                const extraPayout = this.getActiveExtraPayout(p);
                 const labels = [];
                 const series = { lonn: [], folketrygd: [], otp: [], ips: [], fripoliser: [], egenSparing: [] };
                 for (let i = 0; i < totalYears; i++) {
@@ -665,7 +742,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         series.otp.push(rIdx < otpYears ? Math.round(p.annualOTPPayout) : 0);
                         series.ips.push(rIdx < otpYears ? Math.round(p.annualIPSPayout) : 0);
                         series.fripoliser.push(rIdx < otpYears ? Math.round(p.fripoliserPayout) : 0);
-                        series.egenSparing.push(rIdx < otpYears ? extraPayout : 0);
+                        series.egenSparing.push(rIdx < otpYears ? this.getActiveExtraPayout(p, rIdx) : 0);
                     }
                 }
                 return { labels, series };
@@ -692,11 +769,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const payoutYears = Math.max(0, Math.round(p.payoutYears));
                 const level = p.desiredAnnualPension || 0;
                 const g = p.cpiRate || 0;
-                const base = p.futureSocialSecurity || 0;
                 const data = [];
                 for (let i = 0; i < totalYears; i++) {
                     const rIdx = i - workYears;
-                    data.push((rIdx >= 0 && rIdx < payoutYears) ? Math.round(level + base * (Math.pow(1 + g, rIdx) - 1)) : null);
+                    data.push((rIdx >= 0 && rIdx < payoutYears) ? Math.round(level * Math.pow(1 + g, rIdx)) : null);
                 }
                 return data;
             },
@@ -986,8 +1062,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             series.otp.push(Math.round(remaining(p.futureOTPSaldo || 0, p.annualOTPPayout || 0, k)));
                             series.ips.push(Math.round(remaining(p.futureIPSSaldo || 0, p.annualIPSPayout || 0, k)));
                             const egenV0 = comboActive ? (p.requiredCapitalAtRetirement || 0) : 0;
-                            const egenPay = comboActive ? (p.annualPensionGap || 0) : 0;
-                            series.egenSparing.push(Math.round(remaining(egenV0, egenPay, k)));
+                            series.egenSparing.push(Math.round(this.remainingGapBalance(
+                                egenV0,
+                                p.annualPensionGap || 0,
+                                p.flatPension || 0,
+                                g,
+                                r,
+                                k
+                            )));
                         } else {
                             series.otp.push(0);
                             series.ips.push(0);
@@ -1158,6 +1240,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             },
 
+            // Nåverdi av annuitet med årlig KPI-vekst i utbetalingsperioden
+            pvGrowingAnnuity: function(payment, g, r, periods) {
+                if (periods <= 0 || payment <= 0) return 0;
+                if (Math.abs(g) < 1e-9 && r > 0) {
+                    return payment * ((1 - Math.pow(1 + r, -periods)) / r);
+                }
+                if (Math.abs(r) < 1e-9) {
+                    if (Math.abs(g) < 1e-9) return payment * periods;
+                    return payment * (Math.pow(1 + g, periods) - 1) / g;
+                }
+                if (Math.abs(r - g) < 1e-9) return payment * periods;
+                const q = (1 + g) / (1 + r);
+                return payment * (1 - Math.pow(q, periods)) / (1 - q);
+            },
+            remainingGrowingBalance: function(V0, payment, g, r, k) {
+                if (k <= 0) return V0;
+                let withdrawn;
+                if (Math.abs(r) < 1e-9) {
+                    withdrawn = Math.abs(g) < 1e-9 ? payment * k : payment * (Math.pow(1 + g, k) - 1) / g;
+                } else if (Math.abs(r - g) < 1e-9) {
+                    withdrawn = payment * k * Math.pow(1 + r, k - 1);
+                } else {
+                    const q = (1 + g) / (1 + r);
+                    const growthFactor = Math.abs(1 - q) < 1e-9 ? k : (1 - Math.pow(q, k)) / (1 - q);
+                    withdrawn = payment * Math.pow(1 + r, k - 1) * growthFactor;
+                }
+                const val = V0 * Math.pow(1 + Math.max(0, r), k) - withdrawn;
+                return Math.max(0, val);
+            },
+
             // Store last required capital and parameters for combo calculations
             lastCalc: null,
             showReferenceLines: true,
@@ -1248,7 +1360,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Fripoliser: add directly to annual pension without return or CPI adjustments
                 const fripoliserPayout = values.annualFripoliserPayout || 0;
-                const totalAnnualPension = futureSocialSecurity + annualOTPPayout + annualIPSPayout + fripoliserPayout;
+                const flatPension = annualOTPPayout + annualIPSPayout + fripoliserPayout;
+                const totalAnnualPension = futureSocialSecurity + flatPension;
                 const pensionPercentage = futureSalary > 0 ? (totalAnnualPension / futureSalary) * 100 : 0;
                 
                 document.getElementById('years-to-retirement').textContent = this.formatNumber(n);
@@ -1308,11 +1421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     goalExplainer.classList.remove('hidden');
                     const percentageGap = values.desiredPensionLevel - pensionPercentage;
                     document.getElementById('pension-gap-details').textContent = `${this.formatPercent(percentageGap)} (${this.formatCurrency(annualPensionGap)} / år)`;
-                    if (r > 0) {
-                        requiredCapitalAtRetirement = annualPensionGap * ((1 - Math.pow(1 + r, -n_payout)) / r);
-                    } else {
-                        requiredCapitalAtRetirement = annualPensionGap * n_payout;
-                    }
+                    requiredCapitalAtRetirement = this.pvInflationAdjustedGap(annualPensionGap, flatPension, g, r, n_payout);
                     lumpSumToday = requiredCapitalAtRetirement / Math.pow(1 + r, n);
                     if (r > 0) {
                         annualSavingNeeded = requiredCapitalAtRetirement / ((Math.pow(1 + r, n) - 1) / r);
@@ -1384,6 +1493,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fripoliserPayout: fripoliserPayout,
                     payoutYears: n_payout,
                     annualPensionGap: annualPensionGap,
+                    flatPension: flatPension,
                     comboPercent: this.selectedComboPercent,
                     totalAnnualPension: totalAnnualPension,
                     pensionPercentage: pensionPercentage,
@@ -1408,6 +1518,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     annualIPSPayout: annualIPSPayout,
                     requiredCapitalAtRetirement: requiredCapitalAtRetirement,
                     annualPensionGap: annualPensionGap,
+                    flatPension: flatPension,
                     comboPercent: this.selectedComboPercent
                 });
 
