@@ -709,6 +709,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             getActiveExtraPayout: function(p, yearIndex) {
                 if ((p.annualPensionGap || 0) <= 0) return 0;
+                if (!this.isComboActive()) return 0;
                 return Math.round(this.gapPaymentAtYear(
                     p.annualPensionGap,
                     p.flatPension || 0,
