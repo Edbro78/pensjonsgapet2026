@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'grunnbelop': 'Grunnbeløp (1G)',
                 'currentSalary': 'Dagens årslønn',
                 'currentOTPSaldo': 'OTP Saldo i dag',
-                'otpRate': 'OTP-sats',
+                'otpRate': 'OTP-sats på lønn <7,1G',
+                'otpRateMid': 'OTP-sats på lønn mellom 7,1G og 12 G',
                 'currentIPSBalance': 'IPS saldo i dag',
                 'ipsAnnualSaving': 'Årlig sparing IPS',
                 'annualFripoliserPayout': 'Årlig utbetaling fra fripoliser',
@@ -72,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         displayValue = `${value} år`;
                     } else if (id === 'grunnbelop' || id === 'currentSalary' || id === 'currentOTPSaldo' || id === 'currentIPSBalance' || id === 'ipsAnnualSaving' || id === 'annualFripoliserPayout' || id === 'socialSecurityEstimate') {
                         displayValue = `${parseFloat(value).toLocaleString('nb-NO')} kr`;
-                    } else if (id === 'otpRate' || id === 'desiredPensionLevel' || id === 'cpiRate') {
+                    } else if (id === 'otpRate' || id === 'otpRateMid' || id === 'desiredPensionLevel' || id === 'cpiRate') {
                         displayValue = `${parseFloat(value).toFixed(1)} %`;
                     } else if (id === 'expectedReturn') {
                         const returnToStock = { 5: 0, 5.6: 20, 6.3: 45, 6.7: 55, 7: 65, 7.5: 85, 8: 100 };
@@ -178,7 +179,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const labelToId = {
                 'Din alder': 'age', 'Pensjonsalder': 'retirementAge', 'Grunnbeløp (1G)': 'grunnbelop',
-                'Dagens årslønn': 'currentSalary', 'OTP Saldo i dag': 'currentOTPSaldo', 'OTP-sats': 'otpRate',
+                'Dagens årslønn': 'currentSalary', 'OTP Saldo i dag': 'currentOTPSaldo',
+                'OTP-sats': 'otpRate', 'OTP-sats på lønn <7,1G': 'otpRate',
+                'OTP-sats på lønn mellom 7,1G og 12 G': 'otpRateMid',
                 'IPS Saldo i dag': 'currentIPSBalance', 'IPS saldo i dag': 'currentIPSBalance', 'Årlig sparing IPS': 'ipsAnnualSaving',
                 'Årlig utbetaling fra Fripoliser': 'annualFripoliserPayout', 'Årlig utbetaling fra fripoliser': 'annualFripoliserPayout',
                 'Aksjeandel': 'expectedReturn', 'Utbetalingsperiode OTP': 'payoutYears', 'Forventet årlig KPI': 'cpiRate',
@@ -313,7 +316,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'grunnbelop', label: 'Grunnbeløp (1G)', type: 'number', value: 136549, unit: 'kr' },
                 { id: 'currentSalary', label: 'Dagens årslønn', type: 'range', min: 0, max: 15000000, step: 10000, value: 2000000, unit: 'kr' },
                 { id: 'currentOTPSaldo', label: 'OTP Saldo i dag', type: 'range', min: 0, max: 10000000, step: 10000, value: 500000, unit: 'kr' },
-                { id: 'otpRate', label: 'OTP-sats', type: 'range', min: 2, max: 8, step: 0.1, value: 5, unit: '%' },
+                { id: 'otpRate', label: 'OTP-sats på lønn <7,1G', type: 'range', min: 2, max: 8, step: 0.1, value: 5, unit: '%' },
+                { id: 'otpRateMid', label: 'OTP-sats på lønn mellom 7,1G og 12 G', type: 'range', min: 2, max: 8, step: 0.1, value: 5, unit: '%' },
                 { id: 'currentIPSBalance', label: 'IPS Saldo i dag', type: 'range', min: 0, max: 1000000, step: 10000, value: 0, unit: 'kr' },
                 { id: 'ipsAnnualSaving', label: 'Årlig sparing IPS', type: 'range', min: 0, max: 25000, step: 1000, value: 0, unit: 'kr' },
                 { id: 'annualFripoliserPayout', label: 'Årlig utbetaling fra Fripoliser', type: 'range', min: 0, max: 500000, step: 5000, value: 0, unit: 'kr' },
@@ -329,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (inputContainer.childElementCount > 0) return; // Prevent re-initialization
                 
                 // IDs of fields to hide/show with toggle button (excluding currentOTPSaldo itself)
-                const toggleableFieldIds = ['otpRate', 'currentIPSBalance', 'ipsAnnualSaving', 'annualFripoliserPayout', 'expectedReturn', 'payoutYears', 'socialSecurityEstimate'];
+                const toggleableFieldIds = ['otpRate', 'otpRateMid', 'currentIPSBalance', 'ipsAnnualSaving', 'annualFripoliserPayout', 'expectedReturn', 'payoutYears', 'socialSecurityEstimate'];
                 
                 this.inputsConfig.forEach(config => {
                     const wrapper = document.createElement('div');
@@ -669,6 +673,19 @@ document.addEventListener('DOMContentLoaded', function() {
             formatCurrency: (value) => new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value),
             formatNumber: (value) => new Intl.NumberFormat('nb-NO').format(value),
             formatPercent: (value) => `${value.toFixed(1)} %`,
+
+            // OTP: sats på lønn opp til 7,1G + egen sats på lønn mellom 7,1G og 12G (begge målt mot grunnbeløp)
+            computeAnnualOtpContribution: function(salary, grunnbelop, otpRateBelow71G, otpRateMidBand) {
+                const G = Math.max(0, grunnbelop || 0);
+                const annualSalary = Math.max(0, salary || 0);
+                const rateBelow = Number.isFinite(otpRateBelow71G) ? otpRateBelow71G : 5;
+                const rateMid = Number.isFinite(otpRateMidBand) ? otpRateMidBand : rateBelow;
+                const limit71G = 7.1 * G;
+                const limit12G = 12 * G;
+                const salaryUpTo71G = Math.min(annualSalary, limit71G);
+                const salaryInMidBand = Math.max(0, Math.min(annualSalary, limit12G) - limit71G);
+                return salaryUpTo71G * (rateBelow / 100) + salaryInMidBand * (rateMid / 100);
+            },
 
             // --- STABLET SØYLEDIAGRAM: ESTIMERTE ÅRLIGE UTBETALINGER ---
             payoutChart: null,
@@ -1313,7 +1330,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 const G = values.grunnbelop;
-                const maxContributionBaseSalary = 12 * G;
                 if (values.age >= values.retirementAge) {
                     values.age = values.retirementAge - 1;
                     document.getElementById('age').value = values.age;
@@ -1325,8 +1341,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const cpiFactor = 1 + g;
                 const futureSocialSecurity = values.socialSecurityEstimate * Math.pow(cpiFactor, n);
                 const futureSalary = values.currentSalary * Math.pow(cpiFactor, n);
-                const contributionBase = Math.min(values.currentSalary, maxContributionBaseSalary);
-                const pmt = contributionBase * (values.otpRate / 100);
+                const pmt = this.computeAnnualOtpContribution(
+                    values.currentSalary,
+                    G,
+                    values.otpRate,
+                    values.otpRateMid
+                );
                 const pv = values.currentOTPSaldo;
                 const pvComponent = pv * Math.pow(1 + r, n);
                 let pmtComponent;
